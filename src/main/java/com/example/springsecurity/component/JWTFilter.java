@@ -1,5 +1,10 @@
 package com.example.springsecurity.component;
 
+import com.alibaba.fastjson.JSON;
+import com.example.springsecurity.exception.ServiceException;
+import com.example.springsecurity.result.Result;
+import com.example.springsecurity.result.ResultBuilder;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,24 +27,36 @@ import java.io.IOException;
 public class JWTFilter extends GenericFilterBean {
     private final static String HEADER_AUTH_NAME = "auth";
 
-    private JWTProvider jwtProvider;
+    private final JWTProvider jwtProvider;
 
     public JWTFilter(JWTProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException, ServiceException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String authToken = httpServletRequest.getHeader(HEADER_AUTH_NAME);
         if (StringUtils.hasText(authToken)) {
+            // 从自定义JWT中中解析用户
+            Authentication authentication = null;
+            // 解析头部auth TOKEN,过期拦截
             try {
-                // 从自定义JWT中中解析用户
-                Authentication authentication = this.jwtProvider.getAuthentication(authToken);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (MalformedJwtException exception) {
-
+                authentication = this.jwtProvider.getAuthentication(authToken);
+            } catch (ExpiredJwtException e) {
+                Result result = ResultBuilder.failResult("登录身份过期，请重新登录!");
+                servletResponse.setContentType("application/json;charset=utf-8");
+                servletResponse.setCharacterEncoding("UTF-8");
+                servletResponse.getWriter().write(JSON.toJSONString(result));
+                return;
+            }catch (MalformedJwtException e){
+                Result result = ResultBuilder.failResult("身份错误，请重新登录!");
+                servletResponse.setContentType("application/json;charset=utf-8");
+                servletResponse.setCharacterEncoding("UTF-8");
+                servletResponse.getWriter().write(JSON.toJSONString(result));
+                return;
             }
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         // 调用后续的Filter,如果上面的代码逻辑未能复原“session”，SecurityContext中没有信息，后面的流程还是需要"需要登录"
         filterChain.doFilter(servletRequest, servletResponse);

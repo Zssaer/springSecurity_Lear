@@ -4,19 +4,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * @description: TODO
+ * @description: JJWT配置
  * @author: Zhaotianyi
  * @time: 2021/11/17 11:29
  */
 @Component
 @ConfigurationProperties(prefix = "jjwt.security")
 public class JJWTProperties {
+    // JWT加密密码
     private String secret;
-
+    // base64加密密码 (与其上面二选一)
     private String base64Secret;
-
+    // token过期时间
     private long tokenValidityInSeconds;
-
+    // token出于记住时过期时间
     private long tokenValidityInSecondsForRememberMe;
 
     public String getSecret() {

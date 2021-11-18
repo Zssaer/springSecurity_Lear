@@ -40,18 +40,26 @@ public class CustomUserDetailsService implements UserDetailsService {
         List<SimpleUser> userFromDatabase = simpleUserMapper.selectByExample(example);
         if (userFromDatabase.isEmpty()) {
             System.out.println("User  was not found in db");
-            throw new UsernameNotFoundException("User " + login + " was not found in db");
             //这里找不到必须抛异常
+            throw new UsernameNotFoundException("User " + login + " was not found in db");
         }
 
         // 2. 设置角色
         Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
         GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(userFromDatabase.get(0).getRole());
         grantedAuthorities.add(grantedAuthority);
-
-        return new User(login, userFromDatabase.get(0).getUserPassword(), grantedAuthorities);
+        String encodedPassword = userFromDatabase.get(0).getUserPassword();
+        String saltHash = userFromDatabase.get(0).getSalt();
+        String allEncoded = encodedPassword + "|" + saltHash;
+        return new User(login, allEncoded, grantedAuthorities);
     }
 
+    /**
+     * 登录操作
+     * @param loginName 登录名
+     * @param password  密码
+     * @return 用户登录Token
+     */
     public String login(String loginName, String password) {
         if ("".equals(loginName) || loginName == null) {
             return "登陆失败!用户名不能为空!";
@@ -63,7 +71,12 @@ public class CustomUserDetailsService implements UserDetailsService {
             return "登陆失败!用户不存在。";
         }
         SimpleUser user = list.get(0);
-        if (!user.getUserPassword().equals(password)) {
+        String encodedPassword = user.getUserPassword();
+        String saltHash = user.getSalt();
+        String allEncoded = encodedPassword + "|" + saltHash;
+        MD5PasswordEncoder encoder = new MD5PasswordEncoder();
+        // 判断密码正确性
+        if (!encoder.matches(password,allEncoded)) {
             return "登陆失败!用户密码错误。";
         }
 
@@ -73,6 +86,5 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         User userDetails = new User(loginName, password, grantedAuthorities);
         return jwtProvider.createToken(userDetails, false);
-
     }
 }
