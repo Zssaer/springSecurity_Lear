@@ -17,6 +17,9 @@ public class MD5PasswordEncoder implements PasswordEncoder {
 
     @Override
     public boolean matches(CharSequence charSequence, String s) {
+        if ("".equals(s)) {
+            return false;
+        }
         // 分割传来的密文,其中前者为加密密文,后者为带盐hash
         String[] strings = s.split("\\|");
         String encodedPassword = strings[0];

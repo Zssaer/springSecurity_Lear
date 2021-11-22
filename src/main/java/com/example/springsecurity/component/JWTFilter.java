@@ -49,8 +49,8 @@ public class JWTFilter extends GenericFilterBean {
                 servletResponse.setCharacterEncoding("UTF-8");
                 servletResponse.getWriter().write(JSON.toJSONString(result));
                 return;
-            }catch (MalformedJwtException e){
-                Result result = ResultBuilder.failResult("身份错误，请重新登录!");
+            } catch (MalformedJwtException e) {
+                Result result = ResultBuilder.failResult(e.getMessage());
                 servletResponse.setContentType("application/json;charset=utf-8");
                 servletResponse.setCharacterEncoding("UTF-8");
                 servletResponse.getWriter().write(JSON.toJSONString(result));
@@ -58,7 +58,15 @@ public class JWTFilter extends GenericFilterBean {
             }
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
         // 调用后续的Filter,如果上面的代码逻辑未能复原“session”，SecurityContext中没有信息，后面的流程还是需要"需要登录"
-        filterChain.doFilter(servletRequest, servletResponse);
+        try {
+            filterChain.doFilter(servletRequest, servletResponse);
+        } catch (ServiceException e) {
+            Result result = ResultBuilder.failResult(e.getMessage());
+            servletResponse.setContentType("application/json;charset=utf-8");
+            servletResponse.setCharacterEncoding("UTF-8");
+            servletResponse.getWriter().write(JSON.toJSONString(result));
+        }
     }
 }

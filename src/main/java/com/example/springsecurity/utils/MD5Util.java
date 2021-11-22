@@ -16,7 +16,26 @@ public class MD5Util {
     private static char[] hex = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /**
+     * 生成Md5密文
+     *
+     * @param inputStr
+     * @return
+     */
+    public static String generateMd5(String inputStr) {
+        String str = "";
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            str = byte2HexStr(md.digest(inputStr.getBytes()));
+            return str;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return str;
+    }
+
+    /**
      * 利用明文生成带有16位随机盐的Md5密文
+     *
      * @param inputStr 明文
      */
     public static Map<String, String> generateMd5With16BitRandomSalt(String inputStr) {
