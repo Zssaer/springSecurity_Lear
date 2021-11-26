@@ -1,6 +1,5 @@
 package com.example.springsecurity.config;
 
-import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +12,7 @@ import javax.sql.DataSource;
 import java.util.Properties;
 
 /**
- * @description: TODO
+ * @description: Mybatis配置
  * @author: Zhaotianyi
  * @time: 2021/11/17 11:03
  */
